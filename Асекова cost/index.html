@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Асекова cost</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: #1e1e2f;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .calculator {
+    background: linear-gradient(135deg, #2f3242, #1a1c29);
+    border-radius: 15px;
+    padding: 30px;
+    width: 350px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .calculator h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+  }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  input[type="number"], select {
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    background: #2e2f42;
+    color: #e0e0e0;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+  }
+  input[type="number"]:focus, select:focus {
+    outline: none;
+    background: #3a3c57;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    background: #5c6bc0;
+    border: none;
+    border-radius: 10px;
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    letter-spacing: 0.8px;
+  }
+  button:hover {
+    background: #7986cb;
+  }
+  .result {
+    margin-top: 25px;
+    padding: 20px;
+    background: #2a2c3c;
+    border-radius: 12px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    color: #80cbc4;
+    user-select: none;
+    min-height: 48px;
+  }
+  .footer {
+    margin-top: 15px;
+    font-size: 0.75rem;
+    text-align: center;
+    color: #707070;
+  }
+</style>
+</head>
+<body>
+  <section class="calculator" aria-label="Калькулятор стоимости">
+    <h1>Калькулятор стоимости</h1>
+    <form id="costCalcForm" novalidate>
+      <label for="unitPrice">Цена за единицу (₽):</label>
+      <input type="number" id="unitPrice" name="unitPrice" min="0" step="0.01" placeholder="Введите цену за единицу" required aria-required="true" aria-describedby="unitPriceHelp" />
+      <small id="unitPriceHelp" style="display:none;color:#ff6b6b;">Введите корректную цену</small>
+
+      <label for="quantity">Количество:</label>
+      <input type="number" id="quantity" name="quantity" min="0" step="1" placeholder="Введите количество" required aria-required="true" aria-describedby="quantityHelp" />
+      <small id="quantityHelp" style="display:none;color:#ff6b6b;">Введите корректное количество</small>
+
+      <label for="discount">Скидка (%):</label>
+      <input type="number" id="discount" name="discount" min="0" max="100" step="0.1" placeholder="Введите скидку от 0 до 100" aria-describedby="discountHelp" />
+      <small id="discountHelp" style="display:none;color:#ff6b6b;">Скидка должна быть от 0 до 100</small>
+
+      <label for="tax">Налог (%):</label>
+      <select id="tax" name="tax" aria-label="Выберите налог">
+        <option value="0">Без налога</option>
+        <option value="5">НДС 5%</option>
+        <option value="10">НДС 10%</option>
+        <option value="18">НДС 18%</option>
+      </select>
+
+      <button type="submit" aria-label="Рассчитать стоимость">Рассчитать</button>
+    </form>
+    <div class="result" aria-live="polite" aria-atomic="true" role="region" id="result" tabindex="0"></div>
+    <div class="footer">© 2024 Калькулятор стоимости</div>
+  </section>
+
+<script>
+  (() => {
+    const form = document.getElementById('costCalcForm');
+    const resultDiv = document.getElementById('result');
+
+    const unitPriceInput = form.unitPrice;
+    const quantityInput = form.quantity;
+    const discountInput = form.discount;
+    const taxSelect = form.tax;
+
+    const unitPriceHelp = document.getElementById('unitPriceHelp');
+    const quantityHelp = document.getElementById('quantityHelp');
+    const discountHelp = document.getElementById('discountHelp');
+
+    function validateInput() {
+      let valid = true;
+
+      // Проверка цены за единицу
+      if (unitPriceInput.value === '' || Number(unitPriceInput.value) < 0) {
+        unitPriceHelp.style.display = 'block';
+        valid = false;
+      } else {
+        unitPriceHelp.style.display = 'none';
+      }
+
+      // Проверка количества
+      if (quantityInput.value === '' || !Number.isInteger(Number(quantityInput.value)) || Number(quantityInput.value) < 0) {
+        quantityHelp.style.display = 'block';
+        valid = false;
+      } else {
+        quantityHelp.style.display = 'none';
+      }
+
+      // Проверка скидки
+      if (discountInput.value !== '') {
+        const discountVal = Number(discountInput.value);
+        if (discountVal < 0 || discountVal > 100) {
+          discountHelp.style.display = 'block';
+          valid = false;
+        } else {
+          discountHelp.style.display = 'none';
+        }
+      } else {
+        discountHelp.style.display = 'none';
+      }
+
+      return valid;
+    }
+
+    function formatCurrency(value) {
+      return value.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      if (!validateInput()) {
+        resultDiv.textContent = 'Пожалуйста, исправьте ошибки в форме.';
+        resultDiv.style.color = '#ff6b6b';
+        resultDiv.focus();
+        return;
+      }
+
+      const unitPrice = Number(unitPriceInput.value);
+      const quantity = Number(quantityInput.value);
+      const discount = discountInput.value === '' ? 0 : Number(discountInput.value);
+      const tax = Number(taxSelect.value);
+
+      // Вычисление стоимости без скидки
+      const baseCost = unitPrice * quantity;
+
+      // Вычисление суммы скидки
+      const discountAmount = baseCost * (discount / 100);
+
+      // Стоимость после скидки
+      const costAfterDiscount = baseCost - discountAmount;
+
+      // Налог на стоимость после скидки
+      const taxAmount = costAfterDiscount * (tax / 100);
+
+      // Итоговая стоимость
+      const totalCost = costAfterDiscount + taxAmount;
+
+      // Формирование подробного результата на русском
+      const resultText = `
+        <p>Цена за единицу: <strong>${formatCurrency(unitPrice)}</strong></p>
+        <p>Количество: <strong>${quantity}</strong></p>
+        <p>Стоимость без скидки: <strong>${formatCurrency(baseCost)}</strong></p>
+        <p>Скидка (${discount}%): <strong>- ${formatCurrency(discountAmount)}</strong></p>
+        <p>Стоимость после скидки: <strong>${formatCurrency(costAfterDiscount)}</strong></p>
+        <p>Налог (${tax}%): <strong>+ ${formatCurrency(taxAmount)}</strong></p>
+        <hr />
+        <p style="font-size:1.3rem;">Итоговая стоимость: <strong>${formatCurrency(totalCost)}</strong></p>
+      `;
+
+      resultDiv.innerHTML = resultText;
+      resultDiv.style.color = '#80cbc4';
+      resultDiv.focus();
+    });
+  })();
+</script>
+</body>
+</html>

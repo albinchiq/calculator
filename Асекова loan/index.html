@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Асекова loan</title>
+<style>
+  body {
+    background: #f0f2f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .calculator {
+    background: #ffffff;
+    padding: 2.5rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    width: 320px;
+  }
+  .calculator h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #222;
+    text-align: center;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: #444;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1.8px solid #bbb;
+    margin-bottom: 1.25rem;
+    transition: border-color 0.3s ease;
+  }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: #0078d7;
+    box-shadow: 0 0 6px #0078d7aa;
+  }
+  button {
+    width: 100%;
+    background: #0078d7;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #005ea1;
+  }
+  .result {
+    margin-top: 1.75rem;
+    background: #e7f1ff;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    color: #003e7e;
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+  .error {
+    margin-top: 1rem;
+    color: #b00020;
+    font-weight: 700;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <form class="calculator" id="loanForm" novalidate>
+    <h1>Калькулятор кредита</h1>
+    <label for="amount">Сумма кредита (₽)</label>
+    <input type="number" id="amount" min="0" step="1000" placeholder="Введите сумму" required />
+    
+    <label for="interest">Процентная ставка (% годовых)</label>
+    <input type="number" id="interest" min="0" step="0.01" placeholder="Введите ставку" required />
+    
+    <label for="years">Срок кредита (лет)</label>
+    <input type="number" id="years" min="0" step="0.1" placeholder="Введите срок" required />
+    
+    <button type="submit">Рассчитать</button>
+    <div class="error" id="errorMsg" aria-live="polite"></div>
+    <div class="result" id="result" aria-live="polite" style="display:none;"></div>
+  </form>
+
+<script>
+  // Функция для форматирования чисел в денежный формат ₽ с разделением тысяч
+  function formatCurrency(num) {
+    return num.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 2 });
+  }
+
+  document.getElementById('loanForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const amountEl = document.getElementById('amount');
+    const interestEl = document.getElementById('interest');
+    const yearsEl = document.getElementById('years');
+    const errorMsg = document.getElementById('errorMsg');
+    const result = document.getElementById('result');
+
+    errorMsg.textContent = '';
+    result.style.display = 'none';
+    result.textContent = '';
+
+    const principal = parseFloat(amountEl.value);
+    const annualInterest = parseFloat(interestEl.value);
+    const years = parseFloat(yearsEl.value);
+
+    // Валидация входных данных
+    if (isNaN(principal) || principal <= 0) {
+      errorMsg.textContent = 'Пожалуйста, введите корректную сумму кредита.';
+      return;
+    }
+    if (isNaN(annualInterest) || annualInterest < 0) {
+      errorMsg.textContent = 'Пожалуйста, введите корректную процентную ставку.';
+      return;
+    }
+    if (isNaN(years) || years <= 0) {
+      errorMsg.textContent = 'Пожалуйста, введите корректный срок кредита.';
+      return;
+    }
+
+    // Месячная процентная ставка
+    const monthlyInterestRate = annualInterest / 100 / 12;
+    // Общее количество месяцев
+    const numberOfPayments = years * 12;
+
+    let monthlyPayment;
+
+    // Если ставка 0%, простой расчет
+    if (monthlyInterestRate === 0) {
+      monthlyPayment = principal / numberOfPayments;
+    } else {
+      // Формула аннуитетного платежа
+      monthlyPayment = principal * monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -numberOfPayments));
+    }
+
+    const totalPayment = monthlyPayment * numberOfPayments;
+    const totalInterest = totalPayment - principal;
+
+    // Вывод результата с форматированием
+    result.innerHTML = `
+      <div>Ежемесячный платеж: <strong>${formatCurrency(monthlyPayment)}</strong></div>
+      <div>Общая сумма выплат: <strong>${formatCurrency(totalPayment)}</strong></div>
+      <div>Общие проценты: <strong>${formatCurrency(totalInterest)}</strong></div>
+    `;
+    result.style.display = 'block';
+  });
+</script>
+</body>
+</html>
